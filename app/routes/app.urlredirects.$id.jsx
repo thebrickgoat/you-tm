@@ -19,7 +19,7 @@ import {
 } from "@shopify/polaris";
 
 import db from "../db.server";
-import { getURLRedirect, validateURL, createURLRedirect, deleteURLRedirect } from "../models/URLRedirect.server";
+import { getURLRedirect, validateURL, createURLRedirect } from "../models/URLRedirect.server";
 
 export async function loader({ request, params }) {
     const { admin } = await authenticate.admin(request);
@@ -43,7 +43,6 @@ export async function action({ request, params }) {
 
     if (data.action === "delete") {
         await db.uRLRedirect.delete({ where: { id: Number(params.id) } });
-        await deleteURLRedirect(Number(params.id), shop, admin.graphql);
         return redirect("/app");
     }
 
@@ -53,7 +52,7 @@ export async function action({ request, params }) {
     if (errors) {
         return json({ errors }, { status: 422 });
     }
-    
+
     await createURLRedirect(data, shop, admin.graphql);
 
     const urlRedirect =
@@ -83,16 +82,6 @@ export default function URLRedirectForm() {
     const submit = useSubmit();
 
     function handleSave() {
-        let url = `${formState.sourcePage}/?utm_source=${formState.source}&utm_medium=${formState.medium}&utm_campaign=${formState.campaign}&utm_term=${formState.term}&utm_content=${formState.content}`
-        if (formState.sourcePage) {
-            url = ``
-        }
-        if (formState.targetPage) {
-            url = `/${formState.targetPage }/${url}`
-        }
-        if (formState.discount) {
-            url = `${url}&discount=${formState.discount}`
-        }
         const data = {
             title: formState.title,
             source: formState.source || null,
@@ -103,7 +92,6 @@ export default function URLRedirectForm() {
             discount: formState.discount || null,
             sourcePage: formState.sourcePage || null,
             targetPage: formState.targetPage || null,
-            url: url
         };
 
         setCleanFormState({ ...formState });

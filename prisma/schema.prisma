@@ -27,7 +27,6 @@ model URLRedirect {
   shop             String
   sourcePage       String
   targetPage       String
-  url              String
   discount         String
   source           String
   medium           String

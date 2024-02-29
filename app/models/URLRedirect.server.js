@@ -17,9 +17,11 @@ export async function getURLRedirects(shop) {
     else return urlRedirects;
 }
 
-export async function createURLRedirect(data, shop, graphql) {
-    console.log(data)
+export async function createURLRedirect(data, graphql) {
 
+    let path =  `/${data.sourcePage}`
+    let target = `/${data.targetPage}?${data.source != null ? `utm_source=${data.source}` : ``}`;
+    
     const response = await graphql(
         `
         mutation urlRedirectCreate($urlRedirect: UrlRedirectInput!) {
@@ -38,8 +40,8 @@ export async function createURLRedirect(data, shop, graphql) {
         {
             variables: {
                 "urlRedirect": {
-                    "path": data.url,
-                    "target": `/${data.targetPage}`
+                    "path": path,
+                    "target": target
                 }
             },
         }
@@ -49,7 +51,7 @@ export async function createURLRedirect(data, shop, graphql) {
 
 }
 
-export async function deleteURLRedirect(id, shop, graphql) {
+export async function deleteURLRedirect(id, graphql) {
 
 }
 

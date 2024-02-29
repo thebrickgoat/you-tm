@@ -2,7 +2,7 @@
 
 client_id = "31699ca11bcaf8a0844acfca832c18a5"
 name = "you-tm"
-application_url = "https://plus-disney-subscription-discuss.trycloudflare.com"
+application_url = "https://perl-terrorism-royalty-crude.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_online_store_navigation,write_products"
 
 [auth]
 redirect_urls = [
-  "https://plus-disney-subscription-discuss.trycloudflare.com/auth/callback",
-  "https://plus-disney-subscription-discuss.trycloudflare.com/auth/shopify/callback",
-  "https://plus-disney-subscription-discuss.trycloudflare.com/api/auth/callback"
+  "https://perl-terrorism-royalty-crude.trycloudflare.com/auth/callback",
+  "https://perl-terrorism-royalty-crude.trycloudflare.com/auth/shopify/callback",
+  "https://perl-terrorism-royalty-crude.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
