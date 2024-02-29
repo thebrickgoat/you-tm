@@ -2,7 +2,7 @@
 
 client_id = "31699ca11bcaf8a0844acfca832c18a5"
 name = "you-tm"
-application_url = "https://entire-european-municipality-cash.trycloudflare.com"
+application_url = "https://reforms-threat-recently-mtv.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://entire-european-municipality-cash.trycloudflare.com/auth/callback",
-  "https://entire-european-municipality-cash.trycloudflare.com/auth/shopify/callback",
-  "https://entire-european-municipality-cash.trycloudflare.com/api/auth/callback"
+  "https://reforms-threat-recently-mtv.trycloudflare.com/auth/callback",
+  "https://reforms-threat-recently-mtv.trycloudflare.com/auth/shopify/callback",
+  "https://reforms-threat-recently-mtv.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
