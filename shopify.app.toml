@@ -2,7 +2,7 @@
 
 client_id = "31699ca11bcaf8a0844acfca832c18a5"
 name = "you-tm"
-application_url = "https://reforms-threat-recently-mtv.trycloudflare.com"
+application_url = "https://plus-disney-subscription-discuss.trycloudflare.com"
 embedded = true
 
 [build]
@@ -12,13 +12,13 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "write_online_store_navigation,write_products"
 
 [auth]
 redirect_urls = [
-  "https://reforms-threat-recently-mtv.trycloudflare.com/auth/callback",
-  "https://reforms-threat-recently-mtv.trycloudflare.com/auth/shopify/callback",
-  "https://reforms-threat-recently-mtv.trycloudflare.com/api/auth/callback"
+  "https://plus-disney-subscription-discuss.trycloudflare.com/auth/callback",
+  "https://plus-disney-subscription-discuss.trycloudflare.com/auth/shopify/callback",
+  "https://plus-disney-subscription-discuss.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

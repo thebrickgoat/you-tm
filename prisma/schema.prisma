@@ -25,6 +25,8 @@ model URLRedirect {
   id               Int      @id @default(autoincrement())
   title            String
   shop             String
+  sourcePage       String
+  targetPage       String
   url              String
   discount         String
   source           String

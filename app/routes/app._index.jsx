@@ -1,31 +1,23 @@
 import { json } from "@remix-run/node";
 import { useLoaderData, Link, useNavigate } from "@remix-run/react";
+import { authenticate } from "../shopify.server";
 import {
   Card,
   EmptyState,
   Layout,
   Page,
   IndexTable,
-  Thumbnail,
-  Text,
-  Icon,
-  InlineStack,
 } from "@shopify/polaris";
-import { AlertDiamondIcon, ImageIcon } from "@shopify/polaris-icons";
 
-import { authenticate } from "../shopify.server";
 import { getURLRedirects } from "../models/URLRedirect.server";
-import { url } from "inspector";
 
-export const loader = async ({ request }) => {
+export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
   const urlRedirects = await getURLRedirects(session.shop, admin.graphql);
-
   return json({
-    urlRedirects
+    urlRedirects,
   });
-
-};
+}
 
 const EmptyRedirectsState = ({ onAction }) => (
   <EmptyState
@@ -59,20 +51,18 @@ const RedirectsTable = ({ urlRedirects }) => (
       { title: "Source" },
       { title: "Medium" },
       { title: "Campaign" },
+      { title: "Term" },
       { title: "Content" },
-      { title: "Discount" }
     ]}
     selectable={false}
   >
-    {urlRedirects.map((redirect) => (
-      <RedirectsTableRow key={redirect.id} redirect={redirect} />
+    {urlRedirects.map((urlRedirect) => (
+      <RedirectsTableRow key={urlRedirect.id} urlRedirect={urlRedirect} />
     ))}
   </IndexTable>
 );
 
 const RedirectsTableRow = ({ urlRedirect }) => {
-  const urlParams = new URLSearchParams(urlRedirect.url);
-  const urlParamsObject = Object.fromEntries(urlParams.entries());
 
   return (
 
@@ -80,13 +70,11 @@ const RedirectsTableRow = ({ urlRedirect }) => {
       <IndexTable.Cell>
         <Link to={`urlredirects/${urlRedirect.id}`}>{truncate(urlRedirect.title)}</Link>
       </IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.url}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.source}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.medium}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.campaign}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.term}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.content}</IndexTable.Cell>
-      <IndexTable.Cell>{urlRedirect.discount}</IndexTable.Cell>
+      <IndexTable.Cell>{urlRedirect.source == 'null' ? 'None' : urlRedirect.source}</IndexTable.Cell>
+      <IndexTable.Cell>{urlRedirect.medium == 'null' ? 'None' : urlRedirect.medium}</IndexTable.Cell>
+      <IndexTable.Cell>{urlRedirect.campaign == 'null' ? 'None' : urlRedirect.campaign}</IndexTable.Cell>
+      <IndexTable.Cell>{urlRedirect.term == 'null' ? 'None' : urlRedirect.term}</IndexTable.Cell>
+      <IndexTable.Cell>{urlRedirect.content == 'null' ? 'None' : urlRedirect.content}</IndexTable.Cell>
     </IndexTable.Row>
   )
 };
@@ -97,8 +85,8 @@ export default function Index() {
 
   return (
     <Page>
-      <ui-title-bar title="URL Redirects codes">
-        <button variant="primary" onClick={() => navigate("/app/redirects/new")}>
+      <ui-title-bar title="Current UTM URL Redirects">
+        <button variant="primary" onClick={() => navigate("/app/urlredirects/new")}>
           Create URL Redirect code
         </button>
       </ui-title-bar>
@@ -106,7 +94,7 @@ export default function Index() {
         <Layout.Section>
           <Card padding="0">
             {urlRedirects.length === 0 ? (
-              <EmptyRedirectsState onAction={() => navigate("redirects/new")} />
+              <EmptyRedirectsState onAction={() => navigate("urlredirects/new")} />
             ) : (
               <RedirectsTable urlRedirects={urlRedirects} />
             )}

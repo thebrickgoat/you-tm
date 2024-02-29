@@ -19,13 +19,12 @@ import {
 } from "@shopify/polaris";
 
 import db from "../db.server";
-import { getURLRedirect, validateURL } from "../models/URLRedirect.server";
+import { getURLRedirect, validateURL, createURLRedirect, deleteURLRedirect } from "../models/URLRedirect.server";
 
 export async function loader({ request, params }) {
     const { admin } = await authenticate.admin(request);
     if (params.id === "new") {
         return json({
-            destination: "product",
             title: "",
         });
     }
@@ -34,7 +33,7 @@ export async function loader({ request, params }) {
 }
 
 export async function action({ request, params }) {
-    const { session } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
     const { shop } = session;
 
     const data = {
@@ -44,14 +43,18 @@ export async function action({ request, params }) {
 
     if (data.action === "delete") {
         await db.uRLRedirect.delete({ where: { id: Number(params.id) } });
+        await deleteURLRedirect(Number(params.id), shop, admin.graphql);
         return redirect("/app");
     }
 
+    
     const errors = validateURL(data);
 
     if (errors) {
         return json({ errors }, { status: 422 });
     }
+    
+    await createURLRedirect(data, shop, admin.graphql);
 
     const urlRedirect =
         params.id === "new"
@@ -63,6 +66,7 @@ export async function action({ request, params }) {
 
 export default function URLRedirectForm() {
     const errors = useActionData()?.errors || {};
+
     const urlRedirect = useLoaderData();
     const [formState, setFormState] = useState(urlRedirect);
     const [cleanFormState, setCleanFormState] = useState(urlRedirect);
@@ -77,29 +81,30 @@ export default function URLRedirectForm() {
     const navigate = useNavigate();
 
     const submit = useSubmit();
-    function handleSave() {
-        console.log('fire')
-        let url
-        if (formState.discount !== "" && formState.discount !== undefined) {
-            url = `https://${shop}/discount/${formState.discount}?utm+source=${formState.source}&utm+medium=${formState.medium}&utm+campaign=${formState.campaign}&utm+term=${formState.term}&utm+content=${formState.content}&redirect=${formState.page}`;
-        }
-        else {
-            url = `https://${shop}/${formState.page}?utm+source=${formState.source}&utm+medium=${formState.medium}&utm+campaign=${formState.campaign}&utm+term=${formState.term}&utm+content=${formState.content}`;
-        }
-        console.log(url)
 
+    function handleSave() {
+        let url = `${formState.sourcePage}/?utm_source=${formState.source}&utm_medium=${formState.medium}&utm_campaign=${formState.campaign}&utm_term=${formState.term}&utm_content=${formState.content}`
+        if (formState.sourcePage) {
+            url = ``
+        }
+        if (formState.targetPage) {
+            url = `/${formState.targetPage }/${url}`
+        }
+        if (formState.discount) {
+            url = `${url}&discount=${formState.discount}`
+        }
         const data = {
             title: formState.title,
-            url: url,
-            source: formState.source || "",
-            medium: formState.medium  || "",
-            campaign: formState.campaign || "",
-            term: formState.term || "",
-            content: formState.content || "", 
-            discount: formState.discount || "",
-            page: formState.page,
+            source: formState.source || null,
+            medium: formState.medium || null,
+            campaign: formState.campaign || null,
+            term: formState.term || null,
+            content: formState.content || null,
+            discount: formState.discount || null,
+            sourcePage: formState.sourcePage || null,
+            targetPage: formState.targetPage || null,
+            url: url
         };
-        console.log(data)
 
         setCleanFormState({ ...formState });
         submit(data, { method: "post" });
@@ -115,14 +120,14 @@ export default function URLRedirectForm() {
             <Layout>
                 <Layout.Section>
                     <BlockStack gap="500">
-
+                        {urlRedirect.id && (
+                            <Text as={"h2"} variant="headingLg">
+                                {urlRedirect.url}
+                            </Text>
+                        )}
                         <Card>
                             <BlockStack gap="500">
-                                {urlRedirect.id && (
-                                    <Text as={"h2"} variant="headingLg">
-                                        {urlRedirect.url}
-                                    </Text>
-                                )}
+
                                 <BlockStack gap="300">
                                     <Text as={"h2"} variant="headingLg">
                                         Title
@@ -140,17 +145,31 @@ export default function URLRedirectForm() {
                                 </BlockStack>
                                 <BlockStack gap="300">
                                     <Text as={"h2"} variant="headingLg">
-                                        Page
+                                        Source Page
                                     </Text>
                                     <TextField
-                                        id="page"
-                                        helpText="Page you want the redirect to go to"
-                                        label="page"
+                                        id="sourcePage"
+                                        helpText="Page you are redirecting from."
+                                        label="sourcePage"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.page}
-                                        onChange={(page) => setFormState({ ...formState, page })}
-                                        error={errors.page}
+                                        value={formState.sourcePage}
+                                        error={errors.sourcePage}
+                                        onChange={(sourcePage) => setFormState({ ...formState, sourcePage })}
+                                    />
+                                </BlockStack>
+                                <BlockStack gap="300">
+                                    <Text as={"h2"} variant="headingLg">
+                                        Target Page
+                                    </Text>
+                                    <TextField
+                                        id="targetPage"
+                                        helpText="Page you want the redirect to go to. If left blank, the redirect will go to the home page."
+                                        label="targetPage"
+                                        labelHidden
+                                        autoComplete="off"
+                                        value={formState.targetPage}
+                                        onChange={(targetPage) => setFormState({ ...formState, targetPage })}
                                     />
                                 </BlockStack>
                                 <BlockStack gap="300">
@@ -165,7 +184,6 @@ export default function URLRedirectForm() {
                                         autoComplete="off"
                                         value={formState.discount}
                                         onChange={(discount) => setFormState({ ...formState, discount })}
-                                        error={errors.discount}
                                     />
                                 </BlockStack>
                             </BlockStack>
@@ -183,9 +201,9 @@ export default function URLRedirectForm() {
                                         label="Source"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.source}
+                                        value={formState.source == 'null' ? '' : formState.source}
                                         onChange={(source) => setFormState({ ...formState, source })}
-                                        error={errors.source}
+                                        error={errors.paramater}
                                     />
 
                                 </BlockStack>
@@ -199,9 +217,9 @@ export default function URLRedirectForm() {
                                         label="Medium"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.medium}
+                                        value={formState.medium == 'null' ? '' : formState.medium}
                                         onChange={(medium) => setFormState({ ...formState, medium })}
-                                        error={errors.medium}
+                                        error={errors.paramater}
                                     />
                                 </BlockStack>
 
@@ -214,9 +232,9 @@ export default function URLRedirectForm() {
                                         label="Campaign"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.campaign}
+                                        value={formState.campaign == 'null' ? '' : formState.campaign}
                                         onChange={(campaign) => setFormState({ ...formState, campaign })}
-                                        error={errors.campaign}
+                                        error={errors.paramater}
                                     />
                                 </BlockStack>
                                 <BlockStack gap="300">
@@ -228,9 +246,9 @@ export default function URLRedirectForm() {
                                         label="Term"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.term}
+                                        value={formState.term == 'null' ? '' : formState.term}
                                         onChange={(term) => setFormState({ ...formState, term })}
-                                        error={errors.term}
+                                        error={errors.paramater}
                                     />
                                 </BlockStack>
                                 <BlockStack gap="300">
@@ -242,9 +260,9 @@ export default function URLRedirectForm() {
                                         label="Content"
                                         labelHidden
                                         autoComplete="off"
-                                        value={formState.content}
+                                        value={formState.content == 'null' ? '' : formState.content}
                                         onChange={(content) => setFormState({ ...formState, content })}
-                                        error={errors.content}
+                                        error={errors.paramater}
                                     />
                                 </BlockStack>
                             </BlockStack>
